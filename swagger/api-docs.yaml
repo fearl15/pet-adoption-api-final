@@ -1,14 +1,30 @@
-# swagger/api-docs.yaml
 openapi: 3.0.0
 info:
   title: Pet Adoption API
   description: API for managing adoptable pets (CRUD + Search).
   version: 1.0.0
 servers:
-  - url: /api/v1 # This will be the base path for your Vercel deployment
+  - url: /api/v1 # Base path for your API routes
 tags:
   - name: Pets
     description: Pet management operations
+
+components: # Define common schemas here for reusability
+  schemas:
+    Pet:
+      type: object
+      properties:
+        name: { type: string, example: "Fido" }
+        type: { type: string, example: "Dog" }
+        breed: { type: string, example: "Golden Retriever" }
+        age: { type: integer, example: 3 }
+        isAdopted: { type: boolean, example: false }
+        location: { type: string, example: "Manila" }
+      required:
+        - name
+        - type
+        - age
+        - location
 
 paths:
   /pets:
@@ -26,7 +42,7 @@ paths:
                 properties:
                   success: { type: boolean, example: true }
                   count: { type: integer, example: 2 }
-                  data: { type: array }
+                  data: { type: array, items: { $ref: '#/components/schemas/Pet' } }
     post:
       tags:
         - Pets
@@ -36,15 +52,17 @@ paths:
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                name: { type: string, example: "Fido" }
-                type: { type: string, example: "Dog" }
-                age: { type: integer, example: 3 }
-                location: { type: string, example: "Manila" }
+              $ref: '#/components/schemas/Pet' # Using the defined schema
       responses:
         '201':
           description: Pet created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  data: { $ref: '#/components/schemas/Pet' }
         '400':
           description: Validation error
 
@@ -57,13 +75,87 @@ paths:
         - name: id
           in: path
           required: true
-          schema:
-            type: string
-            example: 60d5f4705a67c52a30982701
+          schema: { type: string }
+          example: 60d5f4705a67c52a30982701
       responses:
         '200':
           description: Successful retrieval
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Pet' }
         '404':
           description: Pet not found
 
-  # ... Continue for PUT, PATCH, DELETE, and /pets/search ...
+    put: # 4. PUT Full Replacement
+      tags:
+        - Pets
+      summary: Fully replace a pet record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Pet' }
+      responses:
+        '200':
+          description: Pet replaced successfully
+
+    patch: # 5. PATCH Partial Update
+      tags:
+        - Pets
+      summary: Partially update a pet (e.g., adoption status)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                isAdopted: { type: boolean, example: true }
+      responses:
+        '200':
+          description: Pet updated successfully
+
+    delete: # 6. DELETE Record
+      tags:
+        - Pets
+      summary: Delete a pet record
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Pet deleted successfully
+
+  /pets/search: # 7. GET Search Endpoint
+    get:
+      tags:
+        - Pets
+      summary: Search pets by name or type
+      parameters:
+        - name: q
+          in: query
+          required: true
+          description: Search query (name or type)
+          schema: { type: string }
+      responses:
+        '200':
+          description: Successful search results
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  count: { type: integer, example: 1 }
+                  data: { type: array, items: { $ref: '#/components/schemas/Pet' } }
