@@ -1,0 +1,69 @@
+# swagger/api-docs.yaml
+openapi: 3.0.0
+info:
+  title: Pet Adoption API
+  description: API for managing adoptable pets (CRUD + Search).
+  version: 1.0.0
+servers:
+  - url: /api/v1 # This will be the base path for your Vercel deployment
+tags:
+  - name: Pets
+    description: Pet management operations
+
+paths:
+  /pets:
+    get:
+      tags:
+        - Pets
+      summary: Get all pets
+      responses:
+        '200':
+          description: Successful retrieval
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean, example: true }
+                  count: { type: integer, example: 2 }
+                  data: { type: array }
+    post:
+      tags:
+        - Pets
+      summary: Add a new pet
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name: { type: string, example: "Fido" }
+                type: { type: string, example: "Dog" }
+                age: { type: integer, example: 3 }
+                location: { type: string, example: "Manila" }
+      responses:
+        '201':
+          description: Pet created
+        '400':
+          description: Validation error
+
+  /pets/{id}:
+    get:
+      tags:
+        - Pets
+      summary: Get a single pet by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            example: 60d5f4705a67c52a30982701
+      responses:
+        '200':
+          description: Successful retrieval
+        '404':
+          description: Pet not found
+
+  # ... Continue for PUT, PATCH, DELETE, and /pets/search ...
