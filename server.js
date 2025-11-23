@@ -13,18 +13,18 @@ const path = require('path');
 dotenv.config();
 
 // Connect to database
-connectDB();
+// connectDB();
 
 const app = express();
 
 // --- Core Middleware ---
 app.use(express.json()); // Body parser for JSON
-app.use(helmetMiddleware); // Secure HTTP headers
+// app.use(helmetMiddleware); // Secure HTTP headers
 app.use(corsMiddleware); // Enable CORS
 
 // --- Swagger Docs Setup ---
 // Load the OpenAPI spec file
-const swaggerDocument = YAML.load(fs.readFileSync(path.join(__dirname, 'swagger/api-docs.yaml'), 'utf8'));
+const swaggerDocument = YAML.load(fs.readFileSync('swagger/api-docs.yaml', 'utf8'));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // --- Primary API Routes ---
