@@ -1,4 +1,3 @@
-// server.js
 const express = require('express');
 const dotenv = require('dotenv');
 const connectDB = require('./config/db');
@@ -12,20 +11,38 @@ const path = require('path');
 // Load environment variables
 dotenv.config();
 
-// Connect to database
-// connectDB();
+// Connect to database (MUST be restored for functional endpoints)
+connectDB(); // <-- RESTORED
 
 const app = express();
 
 // --- Core Middleware ---
 app.use(express.json()); // Body parser for JSON
-// app.use(helmetMiddleware); // Secure HTTP headers
+app.use(helmetMiddleware); // <-- RESTORED Security Middleware
 app.use(corsMiddleware); // Enable CORS
 
-// --- Swagger Docs Setup ---
-// Load the OpenAPI spec file
-const swaggerDocument = YAML.load(fs.readFileSync(path.join(__dirname, 'swagger/api-docs.yaml'), 'utf8'));
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+// --- Swagger Docs Setup (with Graceful Error Handling) ---
+let swaggerDocument = null; 
+
+try {
+    // Attempt to load the file using the original, most reliable path
+    const swaggerPath = path.join(__dirname, 'swagger/api-docs.yaml');
+    swaggerDocument = YAML.load(fs.readFileSync(swaggerPath, 'utf8'));
+    console.log('Swagger documentation loaded successfully.');
+} catch (err) {
+    // This catches the error if Vercel cannot read the file during initialization.
+    console.error('WARNING: Failed to load swagger/api-docs.yaml. Documentation may be unavailable.', err.message);
+}
+
+// Only set up the route if the document successfully loaded
+if (swaggerDocument) {
+    app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
+} else {
+    // Provide a fallback route to prevent the crash/blank page
+    app.get('/api-docs', (req, res) => {
+        res.status(503).json({ success: false, message: 'API Documentation is temporarily unavailable due to a server file access error.' });
+    });
+}
 
 // --- Primary API Routes ---
 app.use('/api/v1/pets', petRoutes);
