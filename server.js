@@ -24,7 +24,7 @@ app.use(corsMiddleware); // Enable CORS
 
 // --- Swagger Docs Setup ---
 // Load the OpenAPI spec file
-const swaggerDocument = YAML.load(fs.readFileSync('swagger/api-docs.yaml', 'utf8'));
+const swaggerDocument = YAML.load(fs.readFileSync(path.join(__dirname, 'swagger/api-docs.yaml'), 'utf8'));
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 // --- Primary API Routes ---
